@@ -11,13 +11,14 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or user_input_token)
 
 def text_to_speech(text, file_name="audio_file.mp3"):
     try:
-        response = client.audio.speech.create(
+        response = client.audio.speech.with_raw_response.create(
             model="tts-1",
             voice="onyx",
             input=text,
             speed=1,
         )
-        response.stream_to_file(file_name)
+        with open(file_name, "wb") as file:
+            file.write(response.content)
         return file_name
     except Exception as e:
         print(f"Error generating audio file: {e}")
@@ -38,7 +39,7 @@ def speech_to_text(audio_file):
 def main():
     st.title("Text to Speech with OpenAI")
 
-    # TTS
+    # TTS entrypoint
     with st.container(border=True):
         text_provided = st.text_area("Enter text to convert to speech", "")
         if st.button("Convert") and text_provided:
@@ -58,8 +59,7 @@ def main():
             else:
                 st.error("Failed to convert text to speech.")
 
-
-    # STT
+    # STT entrypoint
     with st.container(border=True):
         uploaded_file = st.file_uploader("Choose an audiofile")
         if uploaded_file is not None:
