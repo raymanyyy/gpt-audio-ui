@@ -24,15 +24,14 @@ def text_to_speech(text, file_name="audio_file.mp3"):
         return None
 
 
-def speech_to_text(audio_file) -> str | None:
-    try:
-        transcription = client.audio.transcriptions.create(
-            model="whisper-1", file=audio_file, response_format="text"
-        )
-        print(transcription.text)
-    except Exception as e:
-        print(f"Error generating audio file: {e}")
-        return str(e)
+def speech_to_text(audio_file):
+    audio_file = open(audio_file, "rb")
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file,
+        response_format="text",
+    )
+    return transcription
 
 
 # Streamlit app
@@ -59,14 +58,17 @@ def main():
             else:
                 st.error("Failed to convert text to speech.")
 
+
     # STT
     with st.container(border=True):
         uploaded_file = st.file_uploader("Choose an audiofile")
         if uploaded_file is not None:
-            # To read file as bytes:
-            bytes_data = uploaded_file.getvalue()
-            # st.write(bytes_data)
-            st.text(speech_to_text(bytes_data))
+            # Save the file locally
+            file_path = uploaded_file.name
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            # Pass the local file path to the speech_to_text function
+            st.text(speech_to_text(file_path))
 
 
 if __name__ == "__main__":
